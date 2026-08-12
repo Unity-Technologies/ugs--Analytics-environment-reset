@@ -1,3 +1,5 @@
 pytest
+python-dotenv
+keyring
 requests
 https://github.com/Ctri-The-Third/ServiceHelpers/releases/download/v2.4.0/hex_helpers-2.4.0-py3-none-any.whl

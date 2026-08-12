@@ -15,14 +15,14 @@ The core deletion flow (Zendesk -> Sheets -> API key -> POST deletion -> update 
 
 ---
 
-### 2. Add authentication to `fetch_environments()` in main.py
+### 2. ✔️ Add authentication to `fetch_environments()` in main.py
 `main.py:96` `fetch_environments()` calls the Unity Services API (`services.unity.com`) with no auth headers. This likely needs a bearer token or service account auth to work. The planning doc implies you need VPN + credentials.
 
 **File:** `main.py` — `fetch_environments()`
 
 ---
 
-### 3. Create Google Apps Script for Sheets integration
+### 3. ✔️ Create Google Apps Script for Sheets integration
 `SheetsClient` sends POST requests to a `SHEETS_SCRIPT_URL` expecting an Apps Script web app that can:
 
 1. **Append** a row with pre-deletion data (`action: "append"`) and return `{"row": N}`
@@ -49,7 +49,7 @@ Options: use a Slack webhook URL or Slack API with a bot token. Should post:
 
 ---
 
-### 5. Add VPN connectivity check before deletion
+### 5. ✔️ Add VPN connectivity check before deletion
 The planning doc says "Be on the VPN" as a prerequisite. The auto-provisioning service is at `loh-analytics-auto-provisioning.prd.mz.internal.unity3d.com` (internal domain).
 
 Add a connectivity check early in the flow (e.g., DNS resolution or a lightweight health check) and give a clear error message if the VPN is not connected.
@@ -103,7 +103,18 @@ gcloud container clusters get-credentials unity-loh-prd-3-euw1 \
 
 ---
 
-### 10. Add tests for `main()` orchestration flow
+### 10. ✔️ Add resume support for in-progress deletions
+When appending a row, the Apps Script should first check if there is already a row with the same Env ID (column F) and a status of "In Progress" (column I). If a match is found, return the existing row number instead of creating a duplicate.
+
+This allows the CLI to be re-run against the same Zendesk ticket + environment without duplicating the spreadsheet entry — e.g. after a VPN drop, kubectl failure, or aborted confirmation.
+
+**Changes needed:**
+- `apps_script/Code.gs` — `handleAppend()`: search for existing row by env ID + status before appending
+- `sheets_client.py` — no changes needed (already uses the returned `row` index)
+
+---
+
+### 11. Add tests for `main()` orchestration flow
 `test_main.py` only tests `extract_ticket_id()`. The main orchestration logic (Zendesk fetch -> Sheets log -> deletion -> Sheets update) has no integration-level tests.
 
 Add tests that mock the clients and verify the end-to-end flow, including:

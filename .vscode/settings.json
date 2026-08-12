@@ -6,5 +6,8 @@
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.formatting.provider": "black",
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "files.associations": {
+        "*.gs": "javascript"
+    }
 }
