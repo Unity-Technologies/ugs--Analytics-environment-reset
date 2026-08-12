@@ -2,6 +2,8 @@
 import logging
 import requests
 
+from net import retrying
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,14 +14,19 @@ class DeletionClient:
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
 
+    @retrying("the auto-provisioning service", retry_on_read_timeout=False)
     def delete_environment_data(self, env_id: str) -> str:
         """Send POST to /v1/environments/{env_id}/data-deletion.
 
         Returns the new DDNA environment ID (a plain number from the response).
 
+        Connect-phase failures (DNS, VPN down) are retried automatically. A read
+        timeout is not retried: the deletion may already be running server-side,
+        so it is reported for a human to check rather than replayed.
+
         Raises:
             requests.HTTPError on non-2xx status.
-            requests.ConnectionError if the service is unreachable.
+            net.NetworkError if the service is unreachable.
         """
         url = f"{self._base_url}/v1/environments/{env_id}/data-deletion"
         headers = {"x-api-key": self._api_key}

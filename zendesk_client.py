@@ -2,6 +2,8 @@
 import logging
 from serviceHelpers.zendesk import zendesk
 
+from net import retrying
+
 logger = logging.getLogger(__name__)
 
 # Zendesk custom field ID for "ProjectId".
@@ -17,6 +19,7 @@ class ZendeskClient:
         self._zd = zendesk(host, api_key)
         self._host = host
 
+    @retrying("Zendesk")
     def get_ticket_data(self, ticket_id: int) -> dict:
         """Fetch a ticket and return the fields needed for deletion tracking.
 
